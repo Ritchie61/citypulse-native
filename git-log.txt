@@ -42,3 +42,52 @@ app-example
 /ios
 /android
 *.log
+[main 9027f3a] Initial commit of CityPulse Native project, logs removed
+ 39 files changed, 13965 insertions(+), 1 deletion(-)
+ create mode 100644 .gitignore
+ create mode 100644 .vscode/extensions.json
+ create mode 100644 .vscode/settings.json
+ create mode 100644 app.json
+ create mode 100644 app/(tabs)/_layout.tsx
+ create mode 100644 app/(tabs)/explore.tsx
+ create mode 100644 app/(tabs)/index.tsx
+ create mode 100644 app/_layout.tsx
+ create mode 100644 app/modal.tsx
+ create mode 100644 assets/images/android-icon-background.png
+ create mode 100644 assets/images/android-icon-foreground.png
+ create mode 100644 assets/images/android-icon-monochrome.png
+ create mode 100644 assets/images/favicon.png
+ create mode 100644 assets/images/icon.png
+ create mode 100644 assets/images/partial-react-logo.png
+ create mode 100644 assets/images/react-logo.png
+ create mode 100644 assets/images/react-logo@2x.png
+ create mode 100644 assets/images/react-logo@3x.png
+ create mode 100644 assets/images/splash-icon.png
+ create mode 100644 components/external-link.tsx
+ create mode 100644 components/haptic-tab.tsx
+ create mode 100644 components/hello-wave.tsx
+ create mode 100644 components/parallax-scroll-view.tsx
+ create mode 100644 components/themed-text.tsx
+ create mode 100644 components/themed-view.tsx
+ create mode 100644 components/ui/collapsible.tsx
+ create mode 100644 components/ui/icon-symbol.ios.tsx
+ create mode 100644 components/ui/icon-symbol.tsx
+ create mode 100644 constants/theme.ts
+ create mode 100644 eslint.config.js
+ create mode 100644 git-log.txt
+ create mode 100644 hooks/use-color-scheme.ts
+ create mode 100644 hooks/use-color-scheme.web.ts
+ create mode 100644 hooks/use-theme-color.ts
+ create mode 100644 package-lock.json
+ create mode 100644 package.json
+ create mode 100755 scripts/reset-project.js
+ create mode 100644 tsconfig.json
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   git-log.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
