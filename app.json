@@ -8,6 +8,7 @@
     "scheme": "citypulsenative",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "entryPoint": "./app/index.tsx",   // ensures expo-router uses our main entry
     "ios": {
       "supportsTablet": true
     },
@@ -43,6 +44,11 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "assetBundlePatterns": [
+      "assets/images/*",
+      "assets/icons/*",
+      "assets/videos/*"
+    ]   // include images/videos for PostCard and homepage
   }
 }
