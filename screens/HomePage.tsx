@@ -1,42 +1,55 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   FlatList,
   StyleSheet,
   TouchableOpacity,
   Text,
+  ActivityIndicator,
 } from 'react-native';
+import { supabase } from '../lib/supabase';
 import PostCard from '../components/PostCard';
 
 type Post = {
   id: string;
   text: string;
-  media?: string;
-  createdAt: number;
-  layoutType?: 'default' | 'layout2';
+  media_url?: string | null;
+  layout_type?: 'default' | 'layout2';
+  created_at: string;
 };
 
-const MOCK_POSTS: Post[] = [
-  {
-    id: '1',
-    text: 'Heavy rain warning in downtown area. Avoid low-lying roads.',
-    media: 'https://via.placeholder.com/600x400',
-    createdAt: Date.now(),
-    layoutType: 'layout2',
-  },
-  {
-    id: '2',
-    text: 'Power outage reported near the hospital district.',
-    createdAt: Date.now() - 1000 * 60 * 60,
-    layoutType: 'default',
-  },
-];
-
 export default function Home() {
-  // Latest post first
-  const posts = [...MOCK_POSTS].sort(
-    (a, b) => b.createdAt - a.createdAt
-  );
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  async function fetchPosts() {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching posts:', error);
+    } else {
+      setPosts(data ?? []);
+    }
+
+    setLoading(false);
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -46,16 +59,16 @@ export default function Home() {
         renderItem={({ item }) => (
           <PostCard
             text={item.text}
-            media={item.media}
-            layoutType={item.layoutType}
-            timestamp={item.createdAt}
+            media={item.media_url}
+            layoutType={item.layout_type}
+            timestamp={new Date(item.created_at).getTime()}
           />
         )}
         contentContainerStyle={styles.feed}
         showsVerticalScrollIndicator={false}
       />
 
-      {/* Floating New Post Button (not dominant) */}
+      {/* Floating new post button */}
       <TouchableOpacity style={styles.fab}>
         <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
@@ -86,6 +99,10 @@ const styles = StyleSheet.create({
   fabText: {
     color: '#FFFFFF',
     fontSize: 28,
-    lineHeight: 28,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
