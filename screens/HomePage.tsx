@@ -73,9 +73,7 @@ export default function Home() {
       {/* Floating new post button */}
       <TouchableOpacity
   style={styles.fab}
-  onPress={() => {
-    console.log('FAB pressed: Create Post (navigation coming next)');
-  }}
+  onPress={() => router.push('/new-alert')}
 >
   <Text style={styles.fabText}>＋</Text>
 </TouchableOpacity>
