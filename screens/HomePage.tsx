@@ -69,9 +69,14 @@ export default function Home() {
       />
 
       {/* Floating new post button */}
-      <TouchableOpacity style={styles.fab}>
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
+      <TouchableOpacity
+  style={styles.fab}
+  onPress={() => {
+    console.log('FAB pressed: Create Post (navigation coming next)');
+  }}
+>
+  <Text style={styles.fabText}>＋</Text>
+</TouchableOpacity>
     </View>
   );
 }
