@@ -1,82 +1,61 @@
-import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  ActivityIndicator,
-} from 'react-native';
-import { supabase } from '../lib/supabase';
+import React from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import PostCard from '../components/PostCard';
 
-type Post = {
-  id: string;
-  text: string;
-  media_url?: string | null;
-  layout_type?: 'default' | 'layout2';
-  created_at: string;
-};
+// Example posts data (later you’ll fetch this from Supabase)
+const posts = [
+  {
+    id: 1,
+    text: 'Weather alert: heavy rain expected!',
+    user: 'Admin',
+    timestamp: '2 mins ago',
+    media: 'https://example.com/image1.jpg',
+    layoutType: 'layout1',
+  },
+  {
+    id: 2,
+    text: 'Road closed due to flooding',
+    user: 'Admin',
+    timestamp: '10 mins ago',
+    layoutType: 'layout2',
+  },
+  {
+    id: 3,
+    text: 'Community meeting tomorrow at 5 PM',
+    user: 'Community Board',
+    timestamp: '1 hour ago',
+    layoutType: 'layout1',
+  },
+];
+
+// Sort posts latest first
+const sortedPosts = posts.sort((a, b) => b.id - a.id);
 
 export default function Home() {
-  const router = useRouter();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  async function fetchPosts() {
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data ?? []);
-    }
-
-    setLoading(false);
-  }
-
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
   return (
     <View style={styles.container}>
-      <FlatList
-        data={posts}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {sortedPosts.map((post) => (
           <PostCard
-            text={item.text}
-            media={item.media_url}
-            layoutType={item.layout_type}
-            timestamp={new Date(item.created_at).getTime()}
+            key={post.id}
+            text={post.text}
+            user={post.user}
+            timestamp={post.timestamp}
+            media={post.media}
+            layoutType={post.layoutType}
           />
-        )}
-        contentContainerStyle={styles.feed}
-        showsVerticalScrollIndicator={false}
-      />
+        ))}
 
-      {/* Floating new post button */}
-      <TouchableOpacity
-  style={styles.fab}
-  onPress={() => router.push('/new-alert')}
->
-  <Text style={styles.fabText}>＋</Text>
-</TouchableOpacity>
+        {/* Placeholder buttons */}
+        <View style={styles.buttonsContainer}>
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>Add Post</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button}>
+            <Text style={styles.buttonText}>Comment</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -84,30 +63,24 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F2F4F7',
+    backgroundColor: '#F2F2F2',
   },
-  feed: {
-    paddingVertical: 8,
+  scrollContainer: {
+    paddingVertical: 16,
   },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#2563EB',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
+  buttonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 20,
   },
-  fabText: {
-    color: '#FFFFFF',
-    fontSize: 28,
+  button: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
   },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
