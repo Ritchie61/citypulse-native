@@ -1,149 +1,91 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
-  Text,
   FlatList,
   StyleSheet,
-  Image,
   TouchableOpacity,
-  SafeAreaView,
-  StatusBar,
+  Text,
 } from 'react-native';
+import PostCard from '../components/PostCard';
 
-// Sample post type
 type Post = {
   id: string;
-  user: string;
-  timestamp: string;
   text: string;
-  media?: string; // image/video URL
-  layoutType: 'layout1' | 'layout2';
+  media?: string;
+  createdAt: number;
+  layoutType?: 'default' | 'layout2';
 };
 
-// Sample data
-const initialPosts: Post[] = [
+const MOCK_POSTS: Post[] = [
   {
     id: '1',
-    user: 'Alice',
-    timestamp: '2026-01-29 09:00',
-    text: 'Heavy rain warning in downtown!',
-    media: 'https://via.placeholder.com/300x200.png?text=Weather',
+    text: 'Heavy rain warning in downtown area. Avoid low-lying roads.',
+    media: 'https://via.placeholder.com/600x400',
+    createdAt: Date.now(),
     layoutType: 'layout2',
   },
   {
     id: '2',
-    user: 'Bob',
-    timestamp: '2026-01-28 18:30',
-    text: 'Road closure near Main St.',
-    layoutType: 'layout1',
+    text: 'Power outage reported near the hospital district.',
+    createdAt: Date.now() - 1000 * 60 * 60,
+    layoutType: 'default',
   },
 ];
 
-export default function HomePage() {
-  const [posts, setPosts] = useState<Post[]>(initialPosts);
-
-  // Render each post
-  const renderPost = ({ item }: { item: Post }) => {
-    return (
-      <View style={[styles.postCard, item.layoutType === 'layout2' && styles.layout2]}>
-        <Text style={styles.username}>{item.user}</Text>
-        <Text style={styles.timestamp}>{item.timestamp}</Text>
-        <Text style={styles.postText}>{item.text}</Text>
-        {item.media && (
-          <Image source={{ uri: item.media }} style={styles.postMedia} resizeMode="cover" />
-        )}
-        <TouchableOpacity style={styles.commentButton}>
-          <Text style={styles.commentText}>Comment</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+export default function Home() {
+  // Latest post first
+  const posts = [...MOCK_POSTS].sort(
+    (a, b) => b.createdAt - a.createdAt
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <View style={styles.container}>
       <FlatList
-        data={posts.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))} // latest first
+        data={posts}
         keyExtractor={(item) => item.id}
-        renderItem={renderPost}
-        contentContainerStyle={{ paddingBottom: 100 }} // space for floating button
+        renderItem={({ item }) => (
+          <PostCard
+            text={item.text}
+            media={item.media}
+            layoutType={item.layoutType}
+            timestamp={item.createdAt}
+          />
+        )}
+        contentContainerStyle={styles.feed}
+        showsVerticalScrollIndicator={false}
       />
 
-      {/* Floating New Post Button */}
-      <TouchableOpacity style={styles.newPostButton}>
-        <Text style={styles.newPostText}>+</Text>
+      {/* Floating New Post Button (not dominant) */}
+      <TouchableOpacity style={styles.fab}>
+        <Text style={styles.fabText}>＋</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFA',
+    backgroundColor: '#F2F4F7',
   },
-  postCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
+  feed: {
+    paddingVertical: 8,
   },
-  layout2: {
-    backgroundColor: '#E3F2FD', // subtle blue tint for variant 2
-  },
-  username: {
-    fontWeight: 'bold',
-    color: '#212121',
-    fontSize: 16,
-  },
-  timestamp: {
-    color: '#757575',
-    fontSize: 12,
-    marginBottom: 8,
-  },
-  postText: {
-    color: '#424242',
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  postMedia: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  commentButton: {
-    alignSelf: 'flex-end',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  commentText: {
-    color: '#1976D2',
-    fontWeight: '600',
-  },
-  newPostButton: {
+  fab: {
     position: 'absolute',
     bottom: 24,
     right: 24,
-    backgroundColor: '#1976D2',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2563EB',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
+    justifyContent: 'center',
+    elevation: 4,
   },
-  newPostText: {
-    color: '#fff',
-    fontSize: 32,
-    lineHeight: 32,
+  fabText: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    lineHeight: 28,
   },
 });
