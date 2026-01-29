@@ -1,7 +1,7 @@
 // app/index.tsx
 import React from 'react';
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import Home from '../screens/Home';
+import Home from '../screens/HomePage';
 
 export default function App() {
   return (
