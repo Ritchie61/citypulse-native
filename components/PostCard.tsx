@@ -2,25 +2,37 @@ import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import styles from '../styles/PostCard.styles';
 
-interface PostCardProps {
+export type PostCardProps = {
   text: string;
-  media?: string; // URL of image/video
-  layoutType?: 'layout1' | 'layout2';
-  timestamp?: string;
-  user?: string;
-}
+  media?: string | null;              // Supabase nullable field
+  layoutType?: 'default' | 'layout2'; // Matches DB values
+  timestamp: number | string;         // created_at from Supabase
+  user?: string | null;
+};
 
 const PostCard: React.FC<PostCardProps> = ({
   text,
   media,
-  layoutType = 'layout1',
+  layoutType = 'default',
   timestamp,
   user,
 }) => {
+  const formattedTime =
+    typeof timestamp === 'string'
+      ? new Date(timestamp).toLocaleString()
+      : new Date(timestamp).toLocaleString();
+
   return (
-    <View style={layoutType === 'layout2' ? styles.layout2 : styles.postCard}>
+    <View
+      style={[
+        styles.postCard,
+        layoutType === 'layout2' && styles.layout2,
+      ]}
+    >
       {user && <Text style={internalStyles.user}>{user}</Text>}
+
       <Text style={internalStyles.text}>{text}</Text>
+
       {media && (
         <Image
           source={{ uri: media }}
@@ -28,23 +40,24 @@ const PostCard: React.FC<PostCardProps> = ({
           resizeMode="cover"
         />
       )}
-      {timestamp && <Text style={internalStyles.timestamp}>{timestamp}</Text>}
+
+      <Text style={internalStyles.timestamp}>{formattedTime}</Text>
     </View>
   );
 };
 
-// Optional internal styles for small tweaks
 const internalStyles = StyleSheet.create({
   user: {
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: '600',
+    marginBottom: 6,
   },
   text: {
     fontSize: 16,
+    lineHeight: 22,
   },
   timestamp: {
     fontSize: 12,
-    color: '#888',
+    color: '#6B7280',
     marginTop: 8,
   },
 });
