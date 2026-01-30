@@ -1,90 +1,75 @@
-import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, TouchableOpacity, Text, Alert, Image } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
+import PostCard from '../components/PostCard';
 import { supabase } from '../lib/supabaseClient';
+import { useRouter } from 'expo-router';
 
-export default function NewPost({ navigation }: any) {
-  const [text, setText] = useState('');
-  const [mediaUri, setMediaUri] = useState<string | null>(null);
+interface Post {
+  id: number;
+  text: string;
+  media?: string;
+  layoutType?: 'layout1' | 'layout2';
+  timestamp: string;
+  user?: string;
+}
 
-  // Pick image/video from library
-  const pickMedia = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.All,
-      quality: 0.7,
-    });
+export default function Home() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter(); // for navigation
 
-    if (!result.canceled) {
-      setMediaUri(result.assets[0].uri);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!text && !mediaUri) {
-      Alert.alert('Error', 'Please add text or media for the post.');
-      return;
-    }
-
-    let mediaUrl = null;
-
-    // Upload media to Supabase storage if exists
-    if (mediaUri) {
-      try {
-        const fileName = mediaUri.split('/').pop();
-        const response = await fetch(mediaUri);
-        const blob = await response.blob();
-
-        const { data, error } = await supabase.storage
-          .from('posts-media')
-          .upload(fileName!, blob);
-
-        if (error) throw error;
-
-        const { publicUrl } = supabase.storage.from('posts-media').getPublicUrl(fileName!);
-        mediaUrl = publicUrl;
-      } catch (err) {
-        console.error('Upload error:', err);
-        Alert.alert('Error', 'Failed to upload media.');
-        return;
-      }
-    }
-
-    // Insert post in Supabase table
-    const { data, error } = await supabase.from('posts').insert([
-      {
-        text,
-        media: mediaUrl,
-        user: 'Anonymous', // Replace with auth later
-      },
-    ]);
+  // Fetch posts from Supabase
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('timestamp', { ascending: false }); // latest first
 
     if (error) {
-      console.error('Insert error:', error);
-      Alert.alert('Error', 'Failed to create post.');
+      console.error('Error fetching posts:', error);
+      Alert.alert('Error', 'Failed to load posts');
     } else {
-      Alert.alert('Success', 'Post created!');
-      navigation.goBack();
+      setPosts(data as Post[]);
     }
+    setLoading(false);
   };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Write something..."
-        multiline
-        value={text}
-        onChangeText={setText}
-      />
-      {mediaUri && <Image source={{ uri: mediaUri }} style={styles.preview} />}
-      <View style={styles.buttonsContainer}>
-        <TouchableOpacity style={styles.button} onPress={pickMedia}>
-          <Text style={styles.buttonText}>Add Media</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Post</Text>
-        </TouchableOpacity>
-      </View>
+      {loading ? (
+        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {posts.map((post) => (
+            <PostCard
+              key={post.id}
+              text={post.text}
+              user={post.user}
+              timestamp={post.timestamp}
+              media={post.media}
+              layoutType={post.layoutType}
+            />
+          ))}
+
+          {/* Placeholder buttons */}
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push('/screens/NewPost')}
+            >
+              <Text style={styles.buttonText}>Add Post</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button}>
+              <Text style={styles.buttonText}>Comment</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
     </View>
   );
 }
@@ -92,26 +77,15 @@ export default function NewPost({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
     backgroundColor: '#F2F2F2',
   },
-  input: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    minHeight: 100,
-    marginBottom: 12,
-  },
-  preview: {
-    width: '100%',
-    height: 220,
-    borderRadius: 12,
-    marginBottom: 12,
+  scrollContainer: {
+    paddingVertical: 16,
   },
   buttonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
+    marginVertical: 20,
   },
   button: {
     backgroundColor: '#007AFF',
