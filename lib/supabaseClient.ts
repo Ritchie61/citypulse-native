@@ -1,9 +1,23 @@
-import { createClient } from '@supabase/supabase-js';
+useEffect(() => {
+  const channel = supabase
+    .channel('posts-realtime')
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'posts',
+      },
+      (payload) => {
+        setPosts((currentPosts) => [
+          payload.new as any,
+          ...currentPosts,
+        ]);
+      }
+    )
+    .subscribe();
 
-const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
-
-export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey
-);
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
