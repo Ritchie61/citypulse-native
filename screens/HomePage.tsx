@@ -1,8 +1,8 @@
 // /screens/Home.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
 import PostCard from '../components/PostCard';
-import { supabase } from '../lib/supabaseClient'; // make sure you have this file
+import { supabase } from '../lib/supabaseClient';
 
 interface Post {
   id: string;
@@ -20,9 +20,9 @@ export default function Home() {
   const fetchPosts = async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('posts') // your Supabase table
+      .from('posts')
       .select('*')
-      .order('timestamp', { ascending: false }); // latest posts first
+      .order('timestamp', { ascending: false });
 
     if (error) {
       console.error('Error fetching posts:', error);
@@ -35,6 +35,18 @@ export default function Home() {
   useEffect(() => {
     fetchPosts();
   }, []);
+
+  // Placeholder for Add Post button
+  const handleAddPost = () => {
+    Alert.alert('Add Post', 'This will open the post creation screen.');
+    console.log('Add Post button pressed');
+  };
+
+  // Placeholder for Comment button
+  const handleComment = (postId: string) => {
+    Alert.alert('Comment', `This will open comments for post ${postId}.`);
+    console.log(`Comment button pressed for post ${postId}`);
+  };
 
   return (
     <View style={styles.container}>
@@ -52,14 +64,18 @@ export default function Home() {
           />
         ))}
 
-        {/* Placeholder buttons */}
+        {/* Buttons */}
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={handleAddPost}>
             <Text style={styles.buttonText}>Add Post</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Comment</Text>
-          </TouchableOpacity>
+
+          {/* Comment button works for the latest post */}
+          {posts.length > 0 && (
+            <TouchableOpacity style={styles.button} onPress={() => handleComment(posts[0].id)}>
+              <Text style={styles.buttonText}>Comment</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </View>
