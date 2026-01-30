@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
 import PostCard from '../components/PostCard';
 import { supabase } from '../lib/supabaseClient';
@@ -19,7 +19,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Fetch posts from Supabase
   const fetchPosts = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -36,12 +35,28 @@ export default function Home() {
     setLoading(false);
   };
 
-  // Refresh posts whenever Home screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchPosts();
     }, [])
   );
+
+  // -----------------------
+  // Real-time subscription
+  // -----------------------
+  useEffect(() => {
+    const subscription = supabase
+      .from('posts')
+      .on('INSERT', (payload) => {
+        // Add new post at the top
+        setPosts((currentPosts) => [payload.new, ...currentPosts]);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeSubscription(subscription);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -79,26 +94,9 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F2',
-  },
-  scrollContainer: {
-    paddingVertical: 16,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 20,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#F2F2F2' },
+  scrollContainer: { paddingVertical: 16 },
+  buttonsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 },
+  button: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12 },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
 });
