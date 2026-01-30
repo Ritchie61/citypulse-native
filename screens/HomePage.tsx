@@ -1,58 +1,53 @@
-// /screens/Home.tsx
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Alert } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import PostCard from '../components/PostCard';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '../lib/supabase';
 
 interface Post {
-  id: string;
+  id: number;
   text: string;
+  user?: string;
+  timestamp: string;
   media?: string;
   layoutType?: 'layout1' | 'layout2';
-  timestamp?: string;
-  user?: string;
 }
 
 export default function Home() {
+  const router = useRouter();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const fetchPosts = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('posts')
-      .select('*')
-      .order('timestamp', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching posts:', error);
-    } else {
-      setPosts(data || []);
-    }
-    setLoading(false);
-  };
 
   useEffect(() => {
     fetchPosts();
   }, []);
 
-  // Placeholder for Add Post button
-  const handleAddPost = () => {
-    Alert.alert('Add Post', 'This will open the post creation screen.');
-    console.log('Add Post button pressed');
+  const fetchPosts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('posts')                // your table name
+      .select('*')
+      .order('timestamp', { ascending: false }); // latest first
+
+    if (error) {
+      console.log('Error fetching posts:', error);
+    } else {
+      setPosts(data as Post[]);
+    }
+    setLoading(false);
   };
 
-  // Placeholder for Comment button
-  const handleComment = (postId: string) => {
-    Alert.alert('Comment', `This will open comments for post ${postId}.`);
-    console.log(`Comment button pressed for post ${postId}`);
-  };
+  if (loading) {
+    return (
+      <View style={styles.loaderContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
-        {loading && <Text style={{ textAlign: 'center', marginVertical: 20 }}>Loading posts...</Text>}
-
         {posts.map((post) => (
           <PostCard
             key={post.id}
@@ -64,18 +59,20 @@ export default function Home() {
           />
         ))}
 
-        {/* Buttons */}
+        {/* Placeholder buttons */}
         <View style={styles.buttonsContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleAddPost}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push('/new-post')}
+          >
             <Text style={styles.buttonText}>Add Post</Text>
           </TouchableOpacity>
-
-          {/* Comment button works for the latest post */}
-          {posts.length > 0 && (
-            <TouchableOpacity style={styles.button} onPress={() => handleComment(posts[0].id)}>
-              <Text style={styles.buttonText}>Comment</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => console.log('Comment pressed')}
+          >
+            <Text style={styles.buttonText}>Comment</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </View>
@@ -83,26 +80,10 @@ export default function Home() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F2F2F2',
-  },
-  scrollContainer: {
-    paddingVertical: 16,
-  },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginVertical: 20,
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
+  container: { flex: 1, backgroundColor: '#F2F2F2' },
+  scrollContainer: { paddingVertical: 16 },
+  buttonsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 },
+  button: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12 },
+  buttonText: { color: '#fff', fontWeight: 'bold' },
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });
