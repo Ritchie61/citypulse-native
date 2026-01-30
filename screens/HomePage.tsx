@@ -1,17 +1,25 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
+
 import PostCard from '../components/PostCard';
 import { supabase } from '../lib/supabaseClient';
-import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
 interface Post {
   id: number;
   text: string;
-  media?: string;
+  media?: string | null;
   layoutType?: 'layout1' | 'layout2';
   timestamp: string;
-  user?: string;
+  user?: string | null;
 }
 
 export default function Home() {
@@ -19,8 +27,10 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  const fetchPosts = async () => {
+  // Fetch posts (latest first)
+  const fetchPosts = useCallback(async () => {
     setLoading(true);
+
     const { data, error } = await supabase
       .from('posts')
       .select('*')
@@ -30,73 +40,68 @@ export default function Home() {
       console.error('Error fetching posts:', error);
       Alert.alert('Error', 'Failed to load posts');
     } else {
-      setPosts(data as Post[]);
+      setPosts((data ?? []) as Post[]);
     }
+
     setLoading(false);
-  };
+  }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchPosts();
-    }, [])
-  );
-
-  // -----------------------
-  // Real-time subscription
-  // -----------------------
+  // Initial load + realtime updates
   useEffect(() => {
-    const subscription = supabase
-      .from('posts')
-      .on('INSERT', (payload) => {
-        // Add new post at the top
-        setPosts((currentPosts) => [payload.new, ...currentPosts]);
-      })
+    fetchPosts();
+
+    const channel = supabase
+      .channel('posts-realtime')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'posts' },
+        (payload) => {
+          setPosts((current) => [payload.new as Post, ...current]);
+        }
+      )
       .subscribe();
 
     return () => {
-      supabase.removeSubscription(subscription);
+      supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchPosts]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#007AFF" style={{ marginTop: 50 }} />
-      ) : (
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          {posts.map((post) => (
-            <PostCard
-              key={post.id}
-              text={post.text}
-              user={post.user}
-              timestamp={post.timestamp}
-              media={post.media}
-              layoutType={post.layoutType}
-            />
-          ))}
+      <ScrollView contentContainerStyle={styles.scroll}>
+        {posts.map((post) => (
+          <PostCard
+            key={post.id}
+            text={post.text}
+            media={post.media ?? undefined}
+            timestamp={post.timestamp}
+            user={post.user ?? 'Anonymous'}
+            layoutType={post.layoutType ?? 'layout1'}
+          />
+        ))}
 
-          {/* Buttons */}
-          <View style={styles.buttonsContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={() => router.push('/screens/NewPost')}
-            >
-              <Text style={styles.buttonText}>Add Post</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button}>
-              <Text style={styles.buttonText}>Comment</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      )}
+        {/* Secondary actions (not main focus) */}
+        <View style={styles.actions}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push('/new-post')}
+          >
+            <Text style={styles.buttonText}>Add Post</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.buttonSecondary}>
+            <Text style={styles.buttonText}>Comment</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F2F2F2' },
-  scrollContainer: { paddingVertical: 16 },
-  buttonsContainer: { flexDirection: 'row', justifyContent: 'space-around', marginVertical: 20 },
-  button: { backgroundColor: '#007AFF', paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12 },
-  buttonText: { color: '#fff', fontWeight: 'bold' },
-});
