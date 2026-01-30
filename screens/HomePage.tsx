@@ -105,3 +105,38 @@ export default function Home() {
     </View>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F2F2F2',
+  },
+  scroll: {
+    paddingVertical: 16,
+  },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actions: {
+    marginTop: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+  },
+  buttonSecondary: {
+    backgroundColor: '#A0A0A0',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 14,
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+});
